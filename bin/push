@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -x
+
+pushd client || exit
+  yarn lint && yarn test:no-watch
+popd || exit
+
+git push
