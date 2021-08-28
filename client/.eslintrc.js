@@ -1,11 +1,12 @@
 module.exports = {
     "extends": [
-        // "react-app",
-        // "react-app/jest",
         "airbnb",
         "airbnb-typescript"
     ],
     parserOptions: {
-        project: './tsconfig.json'
+        project: 'tsconfig.json'
+    },
+    rules: {
+        "import/prefer-default-export": "off"
     }
 }
