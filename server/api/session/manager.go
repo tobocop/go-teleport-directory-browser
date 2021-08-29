@@ -12,11 +12,17 @@ type Manager interface {
 	NewSession() (string, error)
 }
 
-type InMemoryManager struct {
+func NewInMemoryManager() Manager {
+	return &inMemoryManager{
+		sessions: make(map[string]time.Time),
+	}
+}
+
+type inMemoryManager struct {
 	sessions map[string]time.Time
 }
 
-func (i InMemoryManager) NewSession() (string, error)  {
+func (i inMemoryManager) NewSession() (string, error)  {
 	b := make([]byte, 32)
 	_, err := rand.Read(b)
 	if err != nil {
