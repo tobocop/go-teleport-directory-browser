@@ -6,4 +6,8 @@ pushd client || exit
   yarn lint && yarn test:no-watch
 popd || exit
 
+pushd server || exit
+  go vet . && go test ./...
+popd || exit
+
 git push
