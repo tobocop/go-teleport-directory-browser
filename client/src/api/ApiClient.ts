@@ -20,6 +20,7 @@ export class ApiClientImpl {
       if (r.status === 204) {
         return true;
       }
+      // TODO: Should include better error handling and return status code
       throw new Error(`${r.status} Failed code`);
     });
   }

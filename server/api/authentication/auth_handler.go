@@ -30,6 +30,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 	}
 
+	// TODO: Not sure if query escape is best option. Maybe base64?
 	escapedUser, err := url.QueryUnescape(authReq.Username)
 	if err != nil {
 		log.Printf("AuthHandler username escape error: %v", err)

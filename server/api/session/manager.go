@@ -24,6 +24,7 @@ func (i InMemoryManager) NewSession() (string, error)  {
 	}
 
 	sessionId := string(b)
+	// TODO: Probably need to lock write / read with a mutex
 	i.sessions[sessionId] = time.Now().Add(ExpiresIn)
 	return sessionId, nil
 }
