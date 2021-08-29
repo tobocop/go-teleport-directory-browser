@@ -2,6 +2,7 @@ export interface ApiClient {
   authenticate(username: string, password: string): Promise<boolean>
 }
 
+// TODO: Add CSRF protection
 export class ApiClientImpl {
   private baseRoute = '/api';
 
