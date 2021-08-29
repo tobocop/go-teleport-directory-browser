@@ -1,7 +1,10 @@
 import React, { FormEvent, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { useApi } from '../api/ApiContextProvider';
+import { Routes } from '../Routes';
 
 export const LoginPage = () => {
+  const history = useHistory();
   const api = useApi();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -13,8 +16,9 @@ export const LoginPage = () => {
     event.preventDefault();
     setIsLoading(true);
     api.authenticate(username, password)
-      .catch((e) => setError(e.message))
-      .finally(() => setIsLoading(false));
+      .finally(() => setIsLoading(false))
+      .then(() => history.push(Routes.AUTHENTICATED))
+      .catch((e) => setError(e.message));
   };
 
   const disableLogin = username === '' || password === '' || isLoading;
