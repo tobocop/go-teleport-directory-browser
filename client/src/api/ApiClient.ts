@@ -17,8 +17,8 @@ export class ApiClientImpl {
         password: encodeURIComponent(password),
       }),
     }).then((r) => {
-      if (r.ok) {
-        return r.json();
+      if (r.status === 204) {
+        return true;
       }
       throw new Error(`${r.status} Failed code`);
     });

@@ -1,10 +1,13 @@
 package authentication
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"github.com/tobocop/go-teleport-directory-browser/api/session"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type AuthRequest struct {
@@ -49,6 +52,16 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if authenticated {
+		sessionId, _ := s.SessionManager.NewSession()
+		cookie := http.Cookie{
+			Name:     session.CookieName,
+			Value:    base64.URLEncoding.EncodeToString([]byte(sessionId)),
+			Expires:  time.Now().Add(session.ExpiresIn),
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		}
+		http.SetCookie(w, &cookie)
 		w.WriteHeader(204)
 	} else {
 		w.Header().Set(
