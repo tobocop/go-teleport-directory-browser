@@ -11,6 +11,8 @@ function App() {
       <Switch>
         <ApiContextProvider>
           <Route exact strict path={Routes.LOGIN} component={LoginPage} />
+
+          {/* TODO: Protect this and other authenticated routes */}
           <Route exact strict path={Routes.AUTHENTICATED} render={authSuccessful} />
         </ApiContextProvider>
       </Switch>

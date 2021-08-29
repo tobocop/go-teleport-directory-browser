@@ -18,6 +18,7 @@ export const LoginPage = () => {
     api.authenticate(username, password)
       .finally(() => setIsLoading(false))
       .then(() => history.push(Routes.AUTHENTICATED))
+      // TODO: Error display and handling should be enhanced based on status code
       .catch((e) => setError(e.message));
   };
 
