@@ -31,7 +31,7 @@ func TestAuthenticationHandler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("reutrns status code %d for %s", test.httpStatus, test.name), func(t *testing.T) {
-			server := newMockServer(nil, "")
+			server := newMockServer(nil, "", nil)
 
 			req := buildRequest(t, test.username, test.password)
 			res := httptest.NewRecorder()
@@ -45,7 +45,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	}
 
 	t.Run("starts a session and sets session cookie when authentication successful", func(t *testing.T) {
-		server := newMockServer(nil, "some-session-id")
+		server := newMockServer(nil, "some-session-id", nil)
 
 		req := buildRequest(t, validUsername, validPassword)
 		res := httptest.NewRecorder()
@@ -70,7 +70,7 @@ func TestAuthenticationHandler(t *testing.T) {
 
 
 	t.Run("returns auth header when authentication fails", func(t *testing.T) {
-		server := newMockServer(nil, "")
+		server := newMockServer(nil, "", nil)
 
 		req := buildRequest(t, validUsername, "invalid|pass")
 		res := httptest.NewRecorder()
@@ -82,8 +82,21 @@ func TestAuthenticationHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("returns server error when authenticator errors", func(t *testing.T) {
-		server := newMockServer(errors.New("some-error"), "")
+	t.Run("returns server error on authenticator errors", func(t *testing.T) {
+		server := newMockServer(errors.New("some-error"), "", nil)
+
+		req := buildRequest(t, validUsername, validPassword)
+		res := httptest.NewRecorder()
+
+		server.AuthHandler(res, req)
+
+		if res.Code != http.StatusInternalServerError {
+			t.Errorf("got status %d but wanted %d", res.Code, http.StatusInternalServerError)
+		}
+	})
+
+	t.Run("returns server error on new session errors", func(t *testing.T) {
+		server := newMockServer(nil, "", errors.New("session-error"))
 
 		req := buildRequest(t, validUsername, validPassword)
 		res := httptest.NewRecorder()
@@ -96,7 +109,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 
 	t.Run("returns method not allowed when request is not a post", func(t *testing.T) {
-		server := newMockServer(nil, "")
+		server := newMockServer(nil, "", nil)
 		for _, method := range []string{
 			http.MethodGet,
 			http.MethodHead,
@@ -119,7 +132,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 
 	t.Run("returns a bad request error when the body cannot be decoded", func(t *testing.T) {
-		server := newMockServer(nil, "")
+		server := newMockServer(nil, "", nil)
 		req := httptest.NewRequest(http.MethodPost, "/api/authenticate", nil)
 		res := httptest.NewRecorder()
 
@@ -141,16 +154,17 @@ func (m *MockAuthenticator) Authenticate(username string, password string) (bool
 
 type MockSessionManager struct {
 	sessionId string
+	err error
 }
 
 func (m *MockSessionManager) NewSession() (string, error) {
-	return m.sessionId, nil
+	return m.sessionId, m.err
 }
 
-func newMockServer(err error, sessionId string) Server {
+func newMockServer(err error, sessionId string, sessionErr error) Server {
 	return Server{
 		Authenticator: &MockAuthenticator{err},
-		SessionManager: &MockSessionManager{sessionId},
+		SessionManager: &MockSessionManager{sessionId, sessionErr},
 	}
 }
 

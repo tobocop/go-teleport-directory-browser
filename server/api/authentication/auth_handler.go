@@ -52,7 +52,12 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if authenticated {
-		sessionId, _ := s.SessionManager.NewSession()
+		sessionId, err := s.SessionManager.NewSession()
+		if err != nil {
+			log.Printf("AuthHandler session manager error: %v", err)
+			w.WriteHeader(500)
+			return
+		}
 		cookie := http.Cookie{
 			Name:     session.CookieName,
 			Value:    base64.URLEncoding.EncodeToString([]byte(sessionId)),
