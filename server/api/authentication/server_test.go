@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/tobocop/go-teleport-directory-browser/api/session"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
-
-type MockAuthenticator struct{
-	err error
-}
 
 var validUsername = "valid|usernamer"
 var validPassword = "valid|passowrd"
@@ -33,7 +31,7 @@ func TestAuthenticationHandler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("reutrns status code %d for %s", test.httpStatus, test.name), func(t *testing.T) {
-			server := newMockServer(nil)
+			server := newMockServer(nil, "")
 
 			req := buildRequest(t, test.username, test.password)
 			res := httptest.NewRecorder()
@@ -46,8 +44,33 @@ func TestAuthenticationHandler(t *testing.T) {
 		})
 	}
 
+	t.Run("starts a session and sets session cookie when authentication successful", func(t *testing.T) {
+		server := newMockServer(nil, "some-session-id")
+
+		req := buildRequest(t, validUsername, validPassword)
+		res := httptest.NewRecorder()
+
+		server.AuthHandler(res, req)
+
+		cookieValues := []string {
+			"Strict",
+			"HttpOnly",
+			"Secure",
+			"c29tZS1zZXNzaW9uLWlk", // base64 of "some-session-id"
+			session.CookieName,
+		}
+
+		for _, val := range cookieValues {
+			cookie := res.Header().Get("Set-Cookie")
+			if !strings.Contains(cookie, val) {
+				t.Errorf("expected cookie to contain %s, but it did not, cookie was: %v", val, cookie)
+			}
+		}
+	})
+
+
 	t.Run("returns auth header when authentication fails", func(t *testing.T) {
-		server := newMockServer(nil)
+		server := newMockServer(nil, "")
 
 		req := buildRequest(t, validUsername, "invalid|pass")
 		res := httptest.NewRecorder()
@@ -60,7 +83,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 
 	t.Run("returns server error when authenticator errors", func(t *testing.T) {
-		server := newMockServer(errors.New("some-error"))
+		server := newMockServer(errors.New("some-error"), "")
 
 		req := buildRequest(t, validUsername, validPassword)
 		res := httptest.NewRecorder()
@@ -73,7 +96,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 
 	t.Run("returns method not allowed when request is not a post", func(t *testing.T) {
-		server := newMockServer(nil)
+		server := newMockServer(nil, "")
 		for _, method := range []string{
 			http.MethodGet,
 			http.MethodHead,
@@ -96,7 +119,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 
 	t.Run("returns a bad request error when the body cannot be decoded", func(t *testing.T) {
-		server := newMockServer(nil)
+		server := newMockServer(nil, "")
 		req := httptest.NewRequest(http.MethodPost, "/api/authenticate", nil)
 		res := httptest.NewRecorder()
 
@@ -108,12 +131,27 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 }
 
+type MockAuthenticator struct{
+	err error
+}
+
 func (m *MockAuthenticator) Authenticate(username string, password string) (bool, error) {
 	return username == validUsername && password == validPassword, m.err
 }
 
-func newMockServer(err error) Server {
-	return Server{&MockAuthenticator{err}}
+type MockSessionManager struct {
+	sessionId string
+}
+
+func (m *MockSessionManager) NewSession() (string, error) {
+	return m.sessionId, nil
+}
+
+func newMockServer(err error, sessionId string) Server {
+	return Server{
+		Authenticator: &MockAuthenticator{err},
+		SessionManager: &MockSessionManager{sessionId},
+	}
 }
 
 func buildRequest(t *testing.T, username, password string) *http.Request {
