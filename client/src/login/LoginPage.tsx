@@ -14,6 +14,7 @@ export const LoginPage = () => {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    setError('');
     setIsLoading(true);
     api.authenticate(username, password)
       .finally(() => setIsLoading(false))
