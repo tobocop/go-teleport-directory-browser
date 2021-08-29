@@ -95,6 +95,10 @@ describe('LoginPage', () => {
     await waitFor(() => expect(screen.queryByText(error.message)).toBeTruthy());
     expect(loginButton.disabled).toBeFalsy();
     expect(screen.queryByText('Loading...')).toBeFalsy();
+    act(() => {
+      userEvent.click(loginButton);
+    });
+    await waitFor(() => expect(screen.queryByText(error.message)).toBeFalsy());
   });
 
   it('requires a username and password to login', () => {
