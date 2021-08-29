@@ -2,11 +2,11 @@ package api
 
 import (
 	"github.com/tobocop/go-teleport-directory-browser/api/authentication"
+	"github.com/tobocop/go-teleport-directory-browser/api/middleware"
 	"net/http"
 )
 
 func RegisterApiRoutes(){
-	// TODO: Add CSRF middleware
 	authServer := authentication.NewServer()
-	http.HandleFunc("/api/authenticate", authServer.AuthHandler)
+	http.HandleFunc("/api/authenticate", middleware.Apply(http.MethodPost, authServer.AuthHandler))
 }

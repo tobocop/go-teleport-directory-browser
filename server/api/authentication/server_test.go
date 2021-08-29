@@ -105,29 +105,6 @@ func TestAuthenticationHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("returns method not allowed when request is not a post", func(t *testing.T) {
-		server := newMockServer(nil, "", nil)
-		for _, method := range []string{
-			http.MethodGet,
-			http.MethodHead,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete,
-			http.MethodConnect,
-			http.MethodOptions,
-			http.MethodTrace,
-		} {
-			req := httptest.NewRequest(method, "/api/authenticate", nil)
-			res := httptest.NewRecorder()
-
-			server.AuthHandler(res, req)
-
-			if res.Code != http.StatusMethodNotAllowed {
-				t.Errorf("method %v should not be allowed and is", method)
-			}
-		}
-	})
-
 	t.Run("returns a bad request error when the body cannot be decoded", func(t *testing.T) {
 		server := newMockServer(nil, "", nil)
 		req := httptest.NewRequest(http.MethodPost, "/api/authenticate", nil)

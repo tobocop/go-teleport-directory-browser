@@ -14,11 +14,6 @@ type AuthRequest struct {
 }
 
 func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 
 	var authReq AuthRequest
