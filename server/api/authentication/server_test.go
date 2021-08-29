@@ -3,6 +3,7 @@ package authentication
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,11 +11,12 @@ import (
 	"testing"
 )
 
-type MockAuthenticator struct{}
-
-func (m *MockAuthenticator) Authenticate(username string, password string) bool {
-	return username == "valid|user" && password == "valid|pass"
+type MockAuthenticator struct{
+	err error
 }
+
+var validUsername = "valid|usernamer"
+var validPassword = "valid|passowrd"
 
 func TestAuthenticationHandler(t *testing.T) {
 	tests := []struct {
@@ -23,25 +25,17 @@ func TestAuthenticationHandler(t *testing.T) {
 		password string
 		httpStatus int
 	}{
-		{"valid credentials", url.QueryEscape("valid|user"), url.QueryEscape("valid|pass"), http.StatusNoContent},
-		{"invalid credentials", "valid|user", "invalid|pass", http.StatusUnauthorized},
-		{"username unescaping fails", "%7Z", "valid|pass", http.StatusInternalServerError},
-		{"password unescaping fails", "valid|user", "%7Z", http.StatusInternalServerError},
+		{"valid credentials", url.QueryEscape(validUsername), url.QueryEscape(validPassword), http.StatusNoContent},
+		{"invalid credentials", validUsername, "invalid|pass", http.StatusUnauthorized},
+		{"username unescaping fails", "%7Z", validPassword, http.StatusInternalServerError},
+		{"password unescaping fails", validUsername, "%7Z", http.StatusInternalServerError},
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("reutrns status code %d for %s", test.httpStatus, test.name), func(t *testing.T) {
-			authenticator := MockAuthenticator{}
-			server := Server{&authenticator}
+			server := newMockServer(nil)
 
-			authReq := AuthRequest{test.username, test.password}
-			payload, err := json.Marshal(authReq)
-
-			if err != nil {
-				t.Fatal("Json marshalling failed")
-			}
-
-			req := httptest.NewRequest(http.MethodPost, "/api/authenticate", bytes.NewBuffer(payload))
+			req := buildRequest(t, test.username, test.password)
 			res := httptest.NewRecorder()
 
 			server.AuthHandler(res, req)
@@ -53,17 +47,9 @@ func TestAuthenticationHandler(t *testing.T) {
 	}
 
 	t.Run("returns auth header when authentication fails", func(t *testing.T) {
-		authenticator := MockAuthenticator{}
-		server := Server{&authenticator}
+		server := newMockServer(nil)
 
-		authReq := AuthRequest{"valid|user", "invalid|pass"}
-		payload, err := json.Marshal(authReq)
-
-		if err != nil {
-			t.Fatal("Json marshalling failed")
-		}
-
-		req := httptest.NewRequest(http.MethodPost, "/api/authenticate", bytes.NewBuffer(payload))
+		req := buildRequest(t, validUsername, "invalid|pass")
 		res := httptest.NewRecorder()
 
 		server.AuthHandler(res, req)
@@ -73,9 +59,21 @@ func TestAuthenticationHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("returns server error when authenticator errors", func(t *testing.T) {
+		server := newMockServer(errors.New("some-error"))
+
+		req := buildRequest(t, validUsername, validPassword)
+		res := httptest.NewRecorder()
+
+		server.AuthHandler(res, req)
+
+		if res.Code != http.StatusInternalServerError {
+			t.Errorf("got status %d but wanted %d", res.Code, http.StatusInternalServerError)
+		}
+	})
+
 	t.Run("returns method not allowed when request is not a post", func(t *testing.T) {
-		authenticator := MockAuthenticator{}
-		server := Server{&authenticator}
+		server := newMockServer(nil)
 		for _, method := range []string{
 			http.MethodGet,
 			http.MethodHead,
@@ -98,7 +96,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 
 	t.Run("returns a bad request error when the body cannot be decoded", func(t *testing.T) {
-		server := Server{&MockAuthenticator{}}
+		server := newMockServer(nil)
 		req := httptest.NewRequest(http.MethodPost, "/api/authenticate", nil)
 		res := httptest.NewRecorder()
 
@@ -108,4 +106,25 @@ func TestAuthenticationHandler(t *testing.T) {
 			t.Errorf("got status %d but wanted %d", res.Code, http.StatusBadRequest)
 		}
 	})
+}
+
+func (m *MockAuthenticator) Authenticate(username string, password string) (bool, error) {
+	return username == validUsername && password == validPassword, m.err
+}
+
+func newMockServer(err error) Server {
+	return Server{&MockAuthenticator{err}}
+}
+
+func buildRequest(t *testing.T, username, password string) *http.Request {
+	t.Helper()
+	authReq := AuthRequest{username, password}
+	payload, err := json.Marshal(authReq)
+
+	if err != nil {
+		t.Fatal("Json marshalling failed")
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/authenticate", bytes.NewBuffer(payload))
+	return req
 }

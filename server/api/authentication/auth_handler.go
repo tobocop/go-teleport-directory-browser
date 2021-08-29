@@ -41,7 +41,14 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if s.Authenticator.Authenticate(escapedUser, escapedPass) {
+	authenticated, err := s.Authenticator.Authenticate(escapedUser, escapedPass)
+	if err != nil {
+		log.Printf("AuthHandler authenticator error: %v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	if authenticated {
 		w.WriteHeader(204)
 	} else {
 		w.Header().Set(
