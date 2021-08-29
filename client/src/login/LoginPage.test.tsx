@@ -8,11 +8,19 @@ import { mockApiWith } from '../testHelpers/mockApiWith';
 import { makeApi } from '../testHelpers/makers/makeApi';
 import { ApiClient } from '../api/ApiClient';
 import { Made } from '../testHelpers/makers/made';
+import { Routes } from '../Routes';
+
+const mockHistory = { push: jest.fn() };
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useHistory: () => mockHistory,
+}));
 
 describe('LoginPage', () => {
   let mockApi: Made<ApiClient>;
 
   beforeEach(() => {
+    mockHistory.push.mockReset();
     mockApi = makeApi({
       authenticate: jest.fn().mockReturnValue(Promise.resolve(false)),
     });
@@ -50,6 +58,23 @@ describe('LoginPage', () => {
     userEvent.click(loginButton);
     expect(screen.queryByText('Loading...')).toBeTruthy();
     expect(loginButton.disabled).toBeTruthy();
+  });
+
+  it('redirects when login succeeds', async () => {
+    const loginPromise = Promise.resolve(true);
+    mockApi.authenticate.mockReturnValue(loginPromise);
+
+    render(<LoginPage />);
+
+    userEvent.type(screen.getByLabelText('Username'), 'some-username');
+    userEvent.type(screen.getByLabelText('Password'), 'some-password');
+
+    await act(async () => {
+      userEvent.click(screen.getByText('Login'));
+      await loginPromise;
+    });
+
+    expect(mockHistory.push).toHaveBeenCalledWith(Routes.AUTHENTICATED);
   });
 
   it('shows an error when login is not successful', async () => {

@@ -5,11 +5,13 @@ import { LoginPage } from './login/LoginPage';
 import { ApiContextProvider } from './api/ApiContextProvider';
 
 function App() {
+  const authSuccessful = () => <div>Auth Successful</div>;
   return (
     <BrowserRouter>
       <Switch>
         <ApiContextProvider>
-          <Route path={Routes.LOGIN} component={LoginPage} />
+          <Route exact strict path={Routes.LOGIN} component={LoginPage} />
+          <Route exact strict path={Routes.AUTHENTICATED} render={authSuccessful} />
         </ApiContextProvider>
       </Switch>
     </BrowserRouter>
