@@ -9,10 +9,10 @@ type StaticUserStore struct {
 }
 
 func NewStaticUserStore(users map[string]string) Store {
-	return &StaticUserStore{ users }
+	return &StaticUserStore{users}
 }
 
-func (s *StaticUserStore) GetUserPassword(username string) (bool, string)  {
+func (s *StaticUserStore) GetUserPassword(username string) (bool, string) {
 	val, ok := s.users[username]
 	return ok, val
 }

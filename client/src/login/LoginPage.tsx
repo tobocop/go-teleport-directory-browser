@@ -1,16 +1,27 @@
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useApi } from '../api/ApiContextProvider';
-import { Routes } from '../Routes';
+import { Routes } from '../routing/Routes';
+import { useAuthState } from '../session/AuthContextProvider';
+import { isApiError } from '../api/ApiError';
+import { loginErrorFromStatusCode } from './loginErrorFromStatusCode';
 
 export const LoginPage = () => {
   const history = useHistory();
   const api = useApi();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const { authenticated, setAuthenticated } = useAuthState();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    if (authenticated) {
+      history.push(Routes.ROOT);
+    }
+  }, [authenticated]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -18,9 +29,14 @@ export const LoginPage = () => {
     setIsLoading(true);
     api.authenticate(username, password)
       .finally(() => setIsLoading(false))
-      .then(() => history.push(Routes.AUTHENTICATED))
-      // TODO: Error display and handling should be enhanced based on status code
-      .catch((e) => setError(e.message));
+      .then((r) => {
+        if (isApiError(r)) {
+          setError(loginErrorFromStatusCode(r.statusCode));
+        } else {
+          setAuthenticated(true);
+        }
+      })
+      .catch(() => setError('Network error occurred. Please check your connection or try again later'));
   };
 
   const disableLogin = username === '' || password === '' || isLoading;

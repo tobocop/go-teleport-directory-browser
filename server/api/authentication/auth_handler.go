@@ -14,33 +14,28 @@ type AuthRequest struct {
 }
 
 func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 
 	var authReq AuthRequest
 	err := json.NewDecoder(req.Body).Decode(&authReq)
 	if err != nil {
 		log.Printf("AuthHandler json decode error: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	authenticated, err := s.Authenticator.Authenticate(authReq.Username, authReq.Password)
+	authenticated, err := s.authenticator.Authenticate(authReq.Username, authReq.Password)
 	if err != nil {
 		log.Printf("AuthHandler authenticator error: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	if authenticated {
-		sessionId, err := s.SessionManager.NewSession()
+		sessionId, err := s.sessionManager.NewSession()
 		if err != nil {
 			log.Printf("AuthHandler session manager error: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		cookie := http.Cookie{
@@ -54,10 +49,6 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		http.SetCookie(w, &cookie)
 		w.WriteHeader(http.StatusNoContent)
 	} else {
-		w.Header().Set(
-			"WWW-Authenticate",
-			"API realm=Please enter a valid username and password to use this site.",
-		)
-		w.WriteHeader(http.StatusUnauthorized)
+		UnauthorizedResponse(w)
 	}
 }

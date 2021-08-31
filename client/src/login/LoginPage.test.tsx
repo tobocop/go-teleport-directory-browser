@@ -8,7 +8,9 @@ import { mockApiWith } from '../testHelpers/mockApiWith';
 import { makeApi } from '../testHelpers/makers/makeApi';
 import { ApiClient } from '../api/ApiClient';
 import { Made } from '../testHelpers/makers/made';
-import { Routes } from '../Routes';
+import { mockAuthStateWith } from '../testHelpers/mockAuthStateWith';
+import { AuthState } from '../session/AuthContextProvider';
+import { makeAuthState } from '../testHelpers/makers/makeAuthState';
 
 const mockHistory = { push: jest.fn() };
 jest.mock('react-router-dom', () => ({
@@ -18,6 +20,7 @@ jest.mock('react-router-dom', () => ({
 
 describe('LoginPage', () => {
   let mockApi: Made<ApiClient>;
+  let mockAuthState: AuthState;
 
   beforeEach(() => {
     mockHistory.push.mockReset();
@@ -25,6 +28,11 @@ describe('LoginPage', () => {
       authenticate: jest.fn().mockReturnValue(Promise.resolve(false)),
     });
     mockApiWith(mockApi);
+
+    mockAuthState = makeAuthState({
+      setAuthenticated: jest.fn(),
+    });
+    mockAuthStateWith(mockAuthState);
   });
 
   it('submits credentials to the api', () => {
@@ -60,7 +68,7 @@ describe('LoginPage', () => {
     expect(loginButton.disabled).toBeTruthy();
   });
 
-  it('redirects when login succeeds', async () => {
+  it('handles login success', async () => {
     const loginPromise = Promise.resolve(true);
     mockApi.authenticate.mockReturnValue(loginPromise);
 
@@ -74,12 +82,12 @@ describe('LoginPage', () => {
       await loginPromise;
     });
 
-    expect(mockHistory.push).toHaveBeenCalledWith(Routes.AUTHENTICATED);
+    expect(mockAuthState.setAuthenticated).toHaveBeenCalledWith(true);
   });
 
   it('shows an error when login is not successful', async () => {
     const error = new Error('Invalid credentials');
-    const loginPromise = Promise.reject(error);
+    const loginPromise = Promise.resolve({ statusCode: 400, error: true });
     mockApi.authenticate.mockReturnValue(loginPromise);
 
     render(<LoginPage />);
@@ -92,7 +100,7 @@ describe('LoginPage', () => {
     act(() => {
       userEvent.click(loginButton);
     });
-    await waitFor(() => expect(screen.queryByText(error.message)).toBeTruthy());
+    await waitFor(() => expect(screen.queryByText('Server error, please try and login later')).toBeTruthy());
     expect(loginButton.disabled).toBeFalsy();
     expect(screen.queryByText('Loading...')).toBeFalsy();
     act(() => {

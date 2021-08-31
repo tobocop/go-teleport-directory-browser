@@ -17,9 +17,9 @@ var validPassword = "valid-pass"
 
 func TestAuthenticationHandler(t *testing.T) {
 	tests := []struct {
-		name string
-		username string
-		password string
+		name       string
+		username   string
+		password   string
 		httpStatus int
 	}{
 		{"valid credentials", validUsername, validPassword, http.StatusNoContent},
@@ -49,7 +49,7 @@ func TestAuthenticationHandler(t *testing.T) {
 
 		server.AuthHandler(res, req)
 
-		cookieValues := []string {
+		cookieValues := []string{
 			"Strict",
 			"HttpOnly",
 			"Secure",
@@ -64,7 +64,6 @@ func TestAuthenticationHandler(t *testing.T) {
 			}
 		}
 	})
-
 
 	t.Run("returns auth header when authentication fails", func(t *testing.T) {
 		server := newMockServer(nil, "", nil)
@@ -105,29 +104,6 @@ func TestAuthenticationHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("returns method not allowed when request is not a post", func(t *testing.T) {
-		server := newMockServer(nil, "", nil)
-		for _, method := range []string{
-			http.MethodGet,
-			http.MethodHead,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete,
-			http.MethodConnect,
-			http.MethodOptions,
-			http.MethodTrace,
-		} {
-			req := httptest.NewRequest(method, "/api/authenticate", nil)
-			res := httptest.NewRecorder()
-
-			server.AuthHandler(res, req)
-
-			if res.Code != http.StatusMethodNotAllowed {
-				t.Errorf("method %v should not be allowed and is", method)
-			}
-		}
-	})
-
 	t.Run("returns a bad request error when the body cannot be decoded", func(t *testing.T) {
 		server := newMockServer(nil, "", nil)
 		req := httptest.NewRequest(http.MethodPost, "/api/authenticate", nil)
@@ -141,7 +117,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 }
 
-type MockAuthenticator struct{
+type MockAuthenticator struct {
 	err error
 }
 
@@ -151,7 +127,11 @@ func (m *MockAuthenticator) Authenticate(username string, password string) (bool
 
 type MockSessionManager struct {
 	sessionId string
-	err error
+	err       error
+}
+
+func (m *MockSessionManager) ValidateSession(s string) error {
+	panic("should-not-be-used-in-this-test")
 }
 
 func (m *MockSessionManager) NewSession() (string, error) {
@@ -160,8 +140,8 @@ func (m *MockSessionManager) NewSession() (string, error) {
 
 func newMockServer(err error, sessionId string, sessionErr error) Server {
 	return Server{
-		Authenticator: &MockAuthenticator{err},
-		SessionManager: &MockSessionManager{sessionId, sessionErr},
+		authenticator:  &MockAuthenticator{err},
+		sessionManager: &MockSessionManager{sessionId, sessionErr},
 	}
 }
 
