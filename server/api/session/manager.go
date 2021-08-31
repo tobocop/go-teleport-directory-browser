@@ -2,6 +2,7 @@ package session
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"sync"
 	"time"
 )
@@ -33,7 +34,7 @@ func (i inMemoryManager) NewSession() (string, error)  {
 		return "", err
 	}
 
-	sessionId := string(b)
+	sessionId := base64.URLEncoding.EncodeToString(b)
 	i.mutex.Lock()
 	i.sessions[sessionId] = time.Now().Add(ExpiresIn)
 	i.mutex.Unlock()

@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useContext } from 'react';
 import { ApiClient, ApiClientImpl } from './ApiClient';
 
-const ApiContext = createContext<ApiClient | undefined>(undefined);
+const ApiContext = createContext<ApiClient | null>(null);
 
 export const ApiContextProvider = ({ children }: { children: ReactNode }) => (
   <ApiContext.Provider value={new ApiClientImpl()}>
@@ -10,9 +10,9 @@ export const ApiContextProvider = ({ children }: { children: ReactNode }) => (
 );
 
 export const useApi = (): ApiClient => {
-  const apiClient = useContext<ApiClient | undefined>(ApiContext);
+  const apiClient = useContext<ApiClient | null>(ApiContext);
 
-  if (apiClient === undefined) {
+  if (apiClient === null) {
     throw Error('Attempted to use api client when outside of the provider context');
   }
 

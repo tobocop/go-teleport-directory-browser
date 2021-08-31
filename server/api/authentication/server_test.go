@@ -56,7 +56,7 @@ func TestAuthenticationHandler(t *testing.T) {
 			"Strict",
 			"HttpOnly",
 			"Secure",
-			"c29tZS1zZXNzaW9uLWlk", // base64 of "some-session-id"
+			"some-session-id",
 			session.CookieName,
 		}
 
