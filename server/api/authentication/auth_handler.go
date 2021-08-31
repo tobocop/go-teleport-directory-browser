@@ -1,7 +1,6 @@
 package authentication
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"github.com/tobocop/go-teleport-directory-browser/api/session"
 	"log"
@@ -27,7 +26,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	err := json.NewDecoder(req.Body).Decode(&authReq)
 	if err != nil {
 		log.Printf("AuthHandler json decode error: %v", err)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -35,21 +34,21 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	escapedUser, err := url.QueryUnescape(authReq.Username)
 	if err != nil {
 		log.Printf("AuthHandler username escape error: %v", err)
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	escapedPass, err := url.QueryUnescape(authReq.Password)
 	if err != nil {
 		log.Printf("AuthHandler password escape error: %v", err)
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	authenticated, err := s.Authenticator.Authenticate(escapedUser, escapedPass)
 	if err != nil {
 		log.Printf("AuthHandler authenticator error: %v", err)
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -57,24 +56,24 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		sessionId, err := s.SessionManager.NewSession()
 		if err != nil {
 			log.Printf("AuthHandler session manager error: %v", err)
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		cookie := http.Cookie{
 			Name:     session.CookieName,
-			Value:    base64.URLEncoding.EncodeToString([]byte(sessionId)),
+			Value:    sessionId,
 			Expires:  time.Now().Add(session.ExpiresIn),
 			Secure:   true,
 			HttpOnly: true,
 			SameSite: http.SameSiteStrictMode,
 		}
 		http.SetCookie(w, &cookie)
-		w.WriteHeader(204)
+		w.WriteHeader(http.StatusNoContent)
 	} else {
 		w.Header().Set(
 			"WWW-Authenticate",
 			"API realm=Please enter a valid username and password to use this site.",
 		)
-		w.WriteHeader(401)
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
