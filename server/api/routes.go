@@ -30,6 +30,6 @@ func RegisterApiRoutes() {
 		if r.authenticated {
 			h = auth.AuthenticatedHandler(h)
 		}
-		http.HandleFunc( fmt.Sprintf("/api%s", r.path), h)
+		http.HandleFunc(fmt.Sprintf("/api%s", r.path), h)
 	}
 }

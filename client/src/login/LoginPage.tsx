@@ -11,8 +11,8 @@ export const LoginPage = () => {
   const api = useApi();
   const { authenticated, setAuthenticated } = useAuthState();
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
