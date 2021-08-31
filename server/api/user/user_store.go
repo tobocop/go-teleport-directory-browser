@@ -5,10 +5,14 @@ type Store interface {
 }
 
 type StaticUserStore struct {
-	Users map[string]string
+	users map[string]string
+}
+
+func NewStaticUserStore(users map[string]string) Store {
+	return &StaticUserStore{ users }
 }
 
 func (s *StaticUserStore) GetUserPassword(username string) (bool, string)  {
-	val, ok := s.Users[username]
+	val, ok := s.users[username]
 	return ok, val
 }
