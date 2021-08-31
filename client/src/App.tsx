@@ -1,22 +1,20 @@
 import React from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
-import { Routes } from './Routes';
-import { LoginPage } from './login/LoginPage';
+import { BrowserRouter, Switch } from 'react-router-dom';
 import { ApiContextProvider } from './api/ApiContextProvider';
+import { AppRoutes } from './routing/AppRoutes';
+import { AuthContextProvider } from './session/AuthContextProvider';
 
 function App() {
-  const authSuccessful = () => <div>Auth Successful</div>;
   return (
-    <BrowserRouter>
-      <Switch>
-        <ApiContextProvider>
-          <Route exact strict path={Routes.LOGIN} component={LoginPage} />
-
-          {/* TODO: Protect this and other authenticated routes */}
-          <Route exact strict path={Routes.AUTHENTICATED} render={authSuccessful} />
-        </ApiContextProvider>
-      </Switch>
-    </BrowserRouter>
+    <ApiContextProvider>
+      <AuthContextProvider>
+        <BrowserRouter>
+          <Switch>
+            <AppRoutes />
+          </Switch>
+        </BrowserRouter>
+      </AuthContextProvider>
+    </ApiContextProvider>
   );
 }
 

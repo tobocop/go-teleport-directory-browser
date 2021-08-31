@@ -8,7 +8,10 @@ import { mockApiWith } from '../testHelpers/mockApiWith';
 import { makeApi } from '../testHelpers/makers/makeApi';
 import { ApiClient } from '../api/ApiClient';
 import { Made } from '../testHelpers/makers/made';
-import { Routes } from '../Routes';
+import { Routes } from '../routing/Routes';
+import { mockAuthStateWith } from '../testHelpers/mockAuthStateWith';
+import { AuthState } from '../session/AuthContextProvider';
+import { makeAuthState } from '../testHelpers/makers/makeAuthState';
 
 const mockHistory = { push: jest.fn() };
 jest.mock('react-router-dom', () => ({
@@ -18,6 +21,7 @@ jest.mock('react-router-dom', () => ({
 
 describe('LoginPage', () => {
   let mockApi: Made<ApiClient>;
+  let mockAuthState: AuthState;
 
   beforeEach(() => {
     mockHistory.push.mockReset();
@@ -25,6 +29,11 @@ describe('LoginPage', () => {
       authenticate: jest.fn().mockReturnValue(Promise.resolve(false)),
     });
     mockApiWith(mockApi);
+
+    mockAuthState = makeAuthState({
+      setAuthenticated: jest.fn(),
+    });
+    mockAuthStateWith(mockAuthState);
   });
 
   it('submits credentials to the api', () => {
@@ -60,7 +69,7 @@ describe('LoginPage', () => {
     expect(loginButton.disabled).toBeTruthy();
   });
 
-  it('redirects when login succeeds', async () => {
+  it('handles login success', async () => {
     const loginPromise = Promise.resolve(true);
     mockApi.authenticate.mockReturnValue(loginPromise);
 
@@ -74,7 +83,8 @@ describe('LoginPage', () => {
       await loginPromise;
     });
 
-    expect(mockHistory.push).toHaveBeenCalledWith(Routes.AUTHENTICATED);
+    expect(mockAuthState.setAuthenticated).toHaveBeenCalledWith(true);
+    expect(mockHistory.push).toHaveBeenCalledWith(Routes.ROOT);
   });
 
   it('shows an error when login is not successful', async () => {

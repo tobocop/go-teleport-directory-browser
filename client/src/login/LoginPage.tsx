@@ -1,11 +1,14 @@
 import React, { FormEvent, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useApi } from '../api/ApiContextProvider';
-import { Routes } from '../Routes';
+import { Routes } from '../routing/Routes';
+import { useAuthState } from '../session/AuthContextProvider';
 
 export const LoginPage = () => {
   const history = useHistory();
   const api = useApi();
+  const { setAuthenticated } = useAuthState();
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
@@ -18,7 +21,11 @@ export const LoginPage = () => {
     setIsLoading(true);
     api.authenticate(username, password)
       .finally(() => setIsLoading(false))
-      .then(() => history.push(Routes.AUTHENTICATED))
+      .then(() => {
+        // TODO: Race condition here
+        setAuthenticated(true);
+        history.push(Routes.ROOT);
+      })
       // TODO: Error display and handling should be enhanced based on status code
       .catch((e) => setError(e.message));
   };
