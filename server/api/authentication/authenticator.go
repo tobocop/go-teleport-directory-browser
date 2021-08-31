@@ -10,10 +10,10 @@ type Authenticator interface {
 }
 
 type staticCredentialsAuthenticator struct {
-	UserStore user.Store
+	userStore user.Store
 }
 
 func (sa *staticCredentialsAuthenticator) Authenticate(username string, password string) (bool, error) {
-	found, storedPassword := sa.UserStore.GetUserPassword(username)
+	found, storedPassword := sa.userStore.GetUserPassword(username)
 	return found && bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)) == nil, nil
 }

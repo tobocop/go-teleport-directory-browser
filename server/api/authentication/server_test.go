@@ -131,14 +131,18 @@ type MockSessionManager struct {
 	err error
 }
 
+func (m *MockSessionManager) ValidateSession(s string) error {
+	panic("should-not-be-used-in-this-test")
+}
+
 func (m *MockSessionManager) NewSession() (string, error) {
 	return m.sessionId, m.err
 }
 
 func newMockServer(err error, sessionId string, sessionErr error) Server {
 	return Server{
-		Authenticator: &MockAuthenticator{err},
-		SessionManager: &MockSessionManager{sessionId, sessionErr},
+		authenticator:  &MockAuthenticator{err},
+		sessionManager: &MockSessionManager{sessionId, sessionErr},
 	}
 }
 

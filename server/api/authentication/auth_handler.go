@@ -24,7 +24,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	authenticated, err := s.Authenticator.Authenticate(authReq.Username, authReq.Password)
+	authenticated, err := s.authenticator.Authenticate(authReq.Username, authReq.Password)
 	if err != nil {
 		log.Printf("AuthHandler authenticator error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -32,7 +32,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if authenticated {
-		sessionId, err := s.SessionManager.NewSession()
+		sessionId, err := s.sessionManager.NewSession()
 		if err != nil {
 			log.Printf("AuthHandler session manager error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)

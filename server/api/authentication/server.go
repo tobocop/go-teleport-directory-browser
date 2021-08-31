@@ -6,21 +6,19 @@ import (
 )
 
 type Server struct {
-	Authenticator Authenticator
-	SessionManager session.Manager
+	authenticator  Authenticator
+	sessionManager session.Manager
 }
 
-func NewServer() Server {
+func NewServer(sessionManager session.Manager) Server {
 	userStore := user.NewStaticUserStore(map[string]string{
 		// the password for some-user is password
 		"some-user": "$2a$10$Gr1epgUTn1i0DSpMFZ1UkOwTi6oCi14Dw/3ygI6nC9xZFRNJ9zuDC",
 	})
-	sessionManager := session.NewInMemoryManager()
-
 	return Server{
-		Authenticator: &staticCredentialsAuthenticator{
-			UserStore: userStore,
+		authenticator: &staticCredentialsAuthenticator{
+			userStore: userStore,
 		},
-		SessionManager:sessionManager,
+		sessionManager: sessionManager,
 	}
 }
