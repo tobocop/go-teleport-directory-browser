@@ -3,7 +3,7 @@ import { ApiError, ApiErrorFromResponse } from './ApiError';
 
 export interface ApiClient {
   authenticate(username: string, password: string): Promise<boolean | ApiError>
-  authenticated(): Promise<boolean>
+  authenticated(): Promise<boolean | ApiError>
 }
 
 export class ApiClientImpl implements ApiClient {
@@ -18,7 +18,7 @@ export class ApiClientImpl implements ApiClient {
     setCookie('csrf-token', this.csrf, 6);
   }
 
-  authenticated(): Promise<boolean> {
+  authenticated(): Promise<boolean | ApiError> {
     return this.makeCall(
       '/me',
       { method: 'GET' },
@@ -26,7 +26,7 @@ export class ApiClientImpl implements ApiClient {
       if (r.status === 204) {
         return true;
       }
-      throw new Error(`${r.status} Failed code`);
+      return ApiErrorFromResponse(r);
     });
   }
 
