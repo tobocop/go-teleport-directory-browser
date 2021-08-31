@@ -28,6 +28,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("AuthHandler json decode error: %v", err)
 		w.WriteHeader(400)
+		return
 	}
 
 	// TODO: Not sure if query escape is best option. Maybe base64?

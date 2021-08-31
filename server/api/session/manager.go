@@ -2,6 +2,7 @@ package session
 
 import (
 	"crypto/rand"
+	"sync"
 	"time"
 )
 
@@ -12,14 +13,17 @@ type Manager interface {
 	NewSession() (string, error)
 }
 
-func NewInMemoryManager() Manager {
-	return &inMemoryManager{
-		sessions: make(map[string]time.Time),
-	}
-}
 
 type inMemoryManager struct {
 	sessions map[string]time.Time
+	mutex *sync.Mutex
+}
+
+func NewInMemoryManager() Manager {
+	return &inMemoryManager{
+		sessions: make(map[string]time.Time),
+		mutex: &sync.Mutex{},
+	}
 }
 
 func (i inMemoryManager) NewSession() (string, error)  {
@@ -30,7 +34,8 @@ func (i inMemoryManager) NewSession() (string, error)  {
 	}
 
 	sessionId := string(b)
-	// TODO: Probably need to lock write / read with a mutex
+	i.mutex.Lock()
 	i.sessions[sessionId] = time.Now().Add(ExpiresIn)
+	i.mutex.Unlock()
 	return sessionId, nil
 }

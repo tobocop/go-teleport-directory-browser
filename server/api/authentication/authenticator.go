@@ -12,7 +12,7 @@ type Authenticator interface {
 	Authenticate(username string, password string) (bool, error)
 }
 
-// I'd provide this via a cerdential manager (aws secrets, credhub, etc) or via an environment variable that was populated through more secure means
+// I'd provide this via a credential manager (aws secrets, credhub, etc) or via an environment variable that was populated through more secure means
 var hmacKey = []byte("8cf7a749-bf77-42ad-abc4-7cf110872bc4")
 
 type staticCredentialsAuthenticator struct {
