@@ -17,9 +17,9 @@ var validPassword = "valid-pass"
 
 func TestAuthenticationHandler(t *testing.T) {
 	tests := []struct {
-		name string
-		username string
-		password string
+		name       string
+		username   string
+		password   string
 		httpStatus int
 	}{
 		{"valid credentials", validUsername, validPassword, http.StatusNoContent},
@@ -49,7 +49,7 @@ func TestAuthenticationHandler(t *testing.T) {
 
 		server.AuthHandler(res, req)
 
-		cookieValues := []string {
+		cookieValues := []string{
 			"Strict",
 			"HttpOnly",
 			"Secure",
@@ -64,7 +64,6 @@ func TestAuthenticationHandler(t *testing.T) {
 			}
 		}
 	})
-
 
 	t.Run("returns auth header when authentication fails", func(t *testing.T) {
 		server := newMockServer(nil, "", nil)
@@ -118,7 +117,7 @@ func TestAuthenticationHandler(t *testing.T) {
 	})
 }
 
-type MockAuthenticator struct{
+type MockAuthenticator struct {
 	err error
 }
 
@@ -128,7 +127,7 @@ func (m *MockAuthenticator) Authenticate(username string, password string) (bool
 
 type MockSessionManager struct {
 	sessionId string
-	err error
+	err       error
 }
 
 func (m *MockSessionManager) ValidateSession(s string) error {

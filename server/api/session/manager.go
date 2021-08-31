@@ -3,16 +3,12 @@ package session
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"sync"
 	"time"
 )
 
 const CookieName = "id"
 const ExpiresIn = 2 * time.Hour
-
-var ErrSessionIdNotFound = errors.New("provided session id could not be matched to session")
-var ErrSessionExpired = errors.New("session has expired")
 
 type Manager interface {
 	NewSession() (string, error)
@@ -21,17 +17,17 @@ type Manager interface {
 
 type inMemoryManager struct {
 	sessions map[string]time.Time
-	mutex *sync.Mutex
+	mutex    *sync.Mutex
 }
 
 func NewInMemoryManager() Manager {
 	return &inMemoryManager{
 		sessions: make(map[string]time.Time),
-		mutex: &sync.Mutex{},
+		mutex:    &sync.Mutex{},
 	}
 }
 
-func (i *inMemoryManager) NewSession() (string, error)  {
+func (i *inMemoryManager) NewSession() (string, error) {
 	b := make([]byte, 32)
 	_, err := rand.Read(b)
 	if err != nil {

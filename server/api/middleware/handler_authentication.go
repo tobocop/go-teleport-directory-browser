@@ -16,7 +16,7 @@ func NewHandlerAuthenticator(sessionManager session.Manager) *handlerAuthenticat
 
 func (s *handlerAuthenticator) AuthenticatedHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("id")
+		cookie, err := r.Cookie(session.CookieName)
 		if err != nil {
 			authentication.UnauthorizedResponse(w)
 			return
