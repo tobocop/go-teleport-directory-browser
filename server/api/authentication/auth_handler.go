@@ -20,14 +20,14 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 	err := json.NewDecoder(req.Body).Decode(&authReq)
 	if err != nil {
 		log.Printf("AuthHandler json decode error: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	authenticated, err := s.authenticator.Authenticate(authReq.Username, authReq.Password)
 	if err != nil {
 		log.Printf("AuthHandler authenticator error: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -35,7 +35,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		sessionId, err := s.sessionManager.NewSession()
 		if err != nil {
 			log.Printf("AuthHandler session manager error: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		cookie := http.Cookie{
@@ -50,6 +50,5 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	} else {
 		UnauthorizedResponse(w)
-		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
