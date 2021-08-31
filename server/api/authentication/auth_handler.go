@@ -5,7 +5,6 @@ import (
 	"github.com/tobocop/go-teleport-directory-browser/api/session"
 	"log"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -30,22 +29,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO: Not sure if query escape is best option. Maybe base64?
-	escapedUser, err := url.QueryUnescape(authReq.Username)
-	if err != nil {
-		log.Printf("AuthHandler username escape error: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	escapedPass, err := url.QueryUnescape(authReq.Password)
-	if err != nil {
-		log.Printf("AuthHandler password escape error: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	authenticated, err := s.Authenticator.Authenticate(escapedUser, escapedPass)
+	authenticated, err := s.Authenticator.Authenticate(authReq.Username, authReq.Password)
 	if err != nil {
 		log.Printf("AuthHandler authenticator error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)

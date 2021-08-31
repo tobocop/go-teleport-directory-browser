@@ -8,13 +8,12 @@ import (
 	"github.com/tobocop/go-teleport-directory-browser/api/session"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 )
 
-var validUsername = "valid|usernamer"
-var validPassword = "valid|passowrd"
+var validUsername = "valid-user"
+var validPassword = "valid-pass"
 
 func TestAuthenticationHandler(t *testing.T) {
 	tests := []struct {
@@ -23,10 +22,8 @@ func TestAuthenticationHandler(t *testing.T) {
 		password string
 		httpStatus int
 	}{
-		{"valid credentials", url.QueryEscape(validUsername), url.QueryEscape(validPassword), http.StatusNoContent},
+		{"valid credentials", validUsername, validPassword, http.StatusNoContent},
 		{"invalid credentials", validUsername, "invalid|pass", http.StatusUnauthorized},
-		{"username unescaping fails", "%7Z", validPassword, http.StatusInternalServerError},
-		{"password unescaping fails", validUsername, "%7Z", http.StatusInternalServerError},
 	}
 
 	for _, test := range tests {
