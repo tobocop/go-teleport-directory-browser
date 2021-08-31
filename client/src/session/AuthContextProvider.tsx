@@ -27,7 +27,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setAuthenticated(true);
         }
-      });
+      })
+      .catch(() => setError('Network error occurred. Please check your connection or try again later'));
   }, [api, setAuthenticated]);
 
   if (authenticated === null) {

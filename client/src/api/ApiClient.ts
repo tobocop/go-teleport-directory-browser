@@ -63,6 +63,11 @@ export class ApiClientImpl implements ApiClient {
     if (body !== null) {
       init.body = JSON.stringify(body);
     }
-    return fetch(`${this.baseRoute}${url}`, init);
+    return fetch(`${this.baseRoute}${url}`, init)
+      .catch((e) => {
+      // eslint-disable-next-line no-console
+        console.error(e);
+        throw (e);
+      });
   }
 }

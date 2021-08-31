@@ -35,7 +35,8 @@ export const LoginPage = () => {
         } else {
           setAuthenticated(true);
         }
-      });
+      })
+      .catch(() => setError('Network error occurred. Please check your connection or try again later'));
   };
 
   const disableLogin = username === '' || password === '' || isLoading;
