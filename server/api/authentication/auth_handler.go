@@ -49,10 +49,7 @@ func (s *Server) AuthHandler(w http.ResponseWriter, req *http.Request) {
 		http.SetCookie(w, &cookie)
 		w.WriteHeader(http.StatusNoContent)
 	} else {
-		w.Header().Set(
-			"WWW-Authenticate",
-			"API realm=Please enter a valid username and password to use this site.",
-		)
+		UnauthorizedResponse(w)
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }

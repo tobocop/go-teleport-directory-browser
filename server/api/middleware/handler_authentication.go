@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/tobocop/go-teleport-directory-browser/api/authentication"
 	"github.com/tobocop/go-teleport-directory-browser/api/session"
 	"net/http"
 )
@@ -17,24 +18,15 @@ func (s *handlerAuthenticator) AuthenticatedHandler(next http.HandlerFunc) http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("id")
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Header().Set(
-				"WWW-Authenticate",
-				"API realm=Please enter a valid username and password to use this site.",
-			)
+			authentication.UnauthorizedResponse(w)
 			return
 		}
 
 		err = s.sessionManager.ValidateSession(cookie.Value)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Header().Set(
-				"WWW-Authenticate",
-				"API realm=Please enter a valid username and password to use this site.",
-			)
+			authentication.UnauthorizedResponse(w)
 			return
 		}
-
 
 		next.ServeHTTP(w, r)
 	}
