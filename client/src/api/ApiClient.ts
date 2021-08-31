@@ -1,7 +1,8 @@
 import { setCookie } from '../SetCookie';
+import { ApiError, ApiErrorFromResponse } from './ApiError';
 
 export interface ApiClient {
-  authenticate(username: string, password: string): Promise<boolean>
+  authenticate(username: string, password: string): Promise<boolean | ApiError>
   authenticated(): Promise<boolean>
 }
 
@@ -29,7 +30,7 @@ export class ApiClientImpl implements ApiClient {
     });
   }
 
-  authenticate(username: string, password: string): Promise<boolean> {
+  authenticate(username: string, password: string): Promise<boolean | ApiError> {
     return this.makeCall(
       '/authenticate',
       { method: 'POST' },
@@ -41,8 +42,7 @@ export class ApiClientImpl implements ApiClient {
       if (r.status === 204) {
         return true;
       }
-      // TODO: Should include better error handling and return status code
-      throw new Error(`${r.status} Failed code`);
+      return ApiErrorFromResponse(r);
     });
   }
 

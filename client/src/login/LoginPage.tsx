@@ -3,6 +3,8 @@ import { useHistory } from 'react-router-dom';
 import { useApi } from '../api/ApiContextProvider';
 import { Routes } from '../routing/Routes';
 import { useAuthState } from '../session/AuthContextProvider';
+import { isApiError } from '../api/ApiError';
+import { loginErrorFromStatusCode } from './loginErrorFromStatusCode';
 
 export const LoginPage = () => {
   const history = useHistory();
@@ -27,9 +29,13 @@ export const LoginPage = () => {
     setIsLoading(true);
     api.authenticate(username, password)
       .finally(() => setIsLoading(false))
-      .then(() => setAuthenticated(true))
-      // TODO: Error display and handling should be enhanced based on status code
-      .catch((e) => setError(e.message));
+      .then((r) => {
+        if (isApiError(r)) {
+          setError(loginErrorFromStatusCode(r.statusCode));
+        } else {
+          setAuthenticated(true);
+        }
+      });
   };
 
   const disableLogin = username === '' || password === '' || isLoading;

@@ -84,12 +84,11 @@ describe('LoginPage', () => {
     });
 
     expect(mockAuthState.setAuthenticated).toHaveBeenCalledWith(true);
-    expect(mockHistory.push).toHaveBeenCalledWith(Routes.ROOT);
   });
 
   it('shows an error when login is not successful', async () => {
     const error = new Error('Invalid credentials');
-    const loginPromise = Promise.reject(error);
+    const loginPromise = Promise.resolve({ statusCode: 400, error: true });
     mockApi.authenticate.mockReturnValue(loginPromise);
 
     render(<LoginPage />);
@@ -102,7 +101,7 @@ describe('LoginPage', () => {
     act(() => {
       userEvent.click(loginButton);
     });
-    await waitFor(() => expect(screen.queryByText(error.message)).toBeTruthy());
+    await waitFor(() => expect(screen.queryByText('Server error, please try and login later')).toBeTruthy());
     expect(loginButton.disabled).toBeFalsy();
     expect(screen.queryByText('Loading...')).toBeFalsy();
     act(() => {
