@@ -1,9 +1,6 @@
 package authentication
 
 import (
-	"crypto/hmac"
-	"crypto/sha512"
-	"encoding/hex"
 	"github.com/tobocop/go-teleport-directory-browser/api/user"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,16 +17,6 @@ type staticCredentialsAuthenticator struct {
 }
 
 func (sa *staticCredentialsAuthenticator) Authenticate(username string, password string) (bool, error) {
-	mac := hmac.New(sha512.New, hmacKey)
-	mac.Write([]byte(password))
-	hash := hex.EncodeToString(mac.Sum(nil))
-
-	hashed, err := bcrypt.GenerateFromPassword([]byte(hash), 10)
-	if err != nil {
-		return false, err
-	}
-
-	found, password := sa.UserStore.GetUserPassword(username)
-
-	return found && bcrypt.CompareHashAndPassword(hashed, []byte(password)) == nil, nil
+	found, storedPassword := sa.UserStore.GetUserPassword(username)
+	return found && bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)) == nil, nil
 }
