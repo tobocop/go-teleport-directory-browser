@@ -14,8 +14,8 @@ export class ApiClientImpl {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        username: encodeURIComponent(username),
-        password: encodeURIComponent(password),
+        username,
+        password,
       }),
     }).then((r) => {
       if (r.status === 204) {
